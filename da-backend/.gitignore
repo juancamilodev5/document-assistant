@@ -31,3 +31,16 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# files from users
+uploads/
+
+# compiled files
+target/
+
+# credentials
+application.properties
+
+# ide
+.idea/
+*.iml
