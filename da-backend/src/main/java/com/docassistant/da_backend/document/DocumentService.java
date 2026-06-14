@@ -13,8 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -22,6 +20,7 @@ import java.util.UUID;
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
+    private final AiServiceClient aiServiceClient;
 
     @Value("${app.upload.dir}")
     private String uploadDir;
@@ -51,6 +50,8 @@ public class DocumentService {
                 .build();
 
         Document saved = documentRepository.save(document);
+
+        aiServiceClient.processDocument(saved.getId(), filePath.toAbsolutePath().toString());
 
         return toResponse(saved);
     }
