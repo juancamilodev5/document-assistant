@@ -11,7 +11,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -50,6 +53,18 @@ public class DocumentService {
         Document saved = documentRepository.save(document);
 
         return toResponse(saved);
+    }
+
+    public void changeStatus(Long documentId, DocumentStatus status) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("document not found"));
+
+        if (document.getStatus() != DocumentStatus.PROCESSING)
+            throw new RuntimeException("document status cannot be changed");
+
+        document.setStatus(status);
+        document.setProcessedAt(LocalDateTime.now());
+        documentRepository.save(document);
     }
 
     public List<DocumentResponse> getUserDocuments(User user) {

@@ -1,6 +1,7 @@
 package com.docassistant.da_backend.document;
 
 import com.docassistant.da_backend.document.dto.DocumentResponse;
+import com.docassistant.da_backend.document.dto.UpdateStatusRequest;
 import com.docassistant.da_backend.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,5 +32,13 @@ public class DocumentController {
             @AuthenticationPrincipal User user
     ) {
         return ResponseEntity.ok(documentService.getUserDocuments(user));
+    }
+
+    @PatchMapping("/{documentId}/status")
+    public ResponseEntity<Void> updateStatus(
+            @PathVariable Long documentId,
+            @RequestBody UpdateStatusRequest request) {
+        documentService.changeStatus(documentId, request.getStatus());
+        return ResponseEntity.noContent().build();
     }
 }
