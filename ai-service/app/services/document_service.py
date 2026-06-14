@@ -22,25 +22,23 @@ async def process(file_path: str, document_id: int) -> int:
 
         store_chunks(document_id, chunks, embeddings)
 
-        # TODO: discomment when spring boot have endpoint
         # notify spring boot document is ready
-        # async with httpx.AsyncClient() as client:
-        #    await client.patch(
-        #        f"{settings.spring_boot_url}/api/documents/{document_id}/status",
-        #        json={"status": "READY"}
-        #    )
+        async with httpx.AsyncClient() as client:
+            await client.patch(
+                f"{settings.spring_boot_url}/api/documents/{document_id}/status",
+                json={"status": "READY"},
+                headers = {"X-Internal-Api-Key": settings.internal_api_key}
+            )
 
         return len(chunks)
     except Exception as e:
-        print('error processing document: ' , e)
-
-        # TODO: discomment when spring boot have endpoint
-        # if something fails, notify spring boot too
-        # async with httpx.AsyncClient() as client:
-        #    await client.patch(
-        #        f"{settings.spring_boot_url}/api/documents/{document_id}/status",
-        #        json={"status": "FAILED"}
-        #    )
+        print('error processing document: ', e)
+        async with httpx.AsyncClient() as client:
+            await client.patch(
+                f"{settings.spring_boot_url}/api/documents/{document_id}/status",
+                json={"status": "FAILED"},
+                headers={"X-Internal-Api-Key": settings.internal_api_key}
+            )
         raise HTTPException(500, str(e))
 
 async def answer(document_id: int, question: str) -> dict:
