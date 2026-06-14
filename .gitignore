@@ -1,0 +1,17 @@
+# Spring Boot
+da-backend/target/
+da-backend/src/main/resources/application.properties
+
+# IntelliJ
+.idea/
+*.iml
+
+# Python / FastAPI
+ai-service/venv/
+ai-service/.env
+ai-service/__pycache__/
+ai-service/**/__pycache__/
+*.pyc
+
+# Uploads
+da-backend/uploads/
