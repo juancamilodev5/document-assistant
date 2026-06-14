@@ -1,5 +1,6 @@
 package com.docassistant.da_backend.config;
 
+import com.docassistant.da_backend.common.InternalApiKeyFilter;
 import com.docassistant.da_backend.common.JwtAuthFilter;
 import com.docassistant.da_backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+    private final InternalApiKeyFilter internalApiKeyFilter;
     private final UserRepository userRepository;
+    private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -34,13 +36,15 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/documents/*/status").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(internalApiKeyFilter, JwtAuthFilter.class);
         return http.build();
     }
 
