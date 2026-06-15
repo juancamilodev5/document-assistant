@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d docassistant"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   qdrant:
     image: qdrant/qdrant:latest
@@ -19,6 +24,46 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
 
+  ai-service:
+    build: ./ai-service
+    container_name: da-ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: 6333
+      SPRING_BOOT_URL: http://backend:8080
+      COLLECTION_NAME: documents
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+    depends_on:
+      - qdrant
+    volumes:
+      - uploads_data:/app/uploads
+
+  backend:
+    build: ./da-backend
+    container_name: da-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/docassistant
+      DB_USER: admin
+      DB_PASSWORD: secret
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: 86400000
+      AI_SERVICE_URL: http://ai-service:8000
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      UPLOAD_DIR: /app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    volumes:
+      - uploads_data:/app/uploads
+
 volumes:
   postgres_data:
   qdrant_data:
+  uploads_data:

@@ -6,6 +6,8 @@ da-backend/src/main/resources/application.properties
 .idea/
 *.iml
 
+.env
+
 # Python / FastAPI
 ai-service/venv/
 ai-service/.env
