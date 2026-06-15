@@ -1,5 +1,6 @@
 package com.docassistant.da_backend.document;
 
+import com.docassistant.da_backend.document.dto.AskDocumentResponse;
 import com.docassistant.da_backend.document.dto.DocumentResponse;
 import com.docassistant.da_backend.user.User;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +73,30 @@ public class DocumentService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public AskDocumentResponse ask(Long documentId, String question, User user) {
+
+        Optional<Document> optionalDocument = documentRepository.findById(documentId);
+
+        if (optionalDocument.isEmpty())
+            throw new RuntimeException("document not found");
+
+        Document document = optionalDocument.get();
+
+        // intentional ambiguous message
+        if (!Objects.equals(document.getUser().getId(), user.getId()))
+            throw new RuntimeException("document not found");
+
+        if (!Objects.equals(DocumentStatus.READY, document.getStatus()))
+            throw new RuntimeException("document is not ready yet");
+
+        Map<String, Object> data = aiServiceClient.askQuestion(documentId, question);
+
+        return AskDocumentResponse.builder()
+                .answer((String) data.get("answer"))
+                .usedChunks((Integer) data.get("chunks_used"))
+                .build();
     }
 
     private DocumentResponse toResponse(Document doc) {

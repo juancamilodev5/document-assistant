@@ -1,8 +1,11 @@
 package com.docassistant.da_backend.document;
 
+import com.docassistant.da_backend.document.dto.AskDocumentRequest;
+import com.docassistant.da_backend.document.dto.AskDocumentResponse;
 import com.docassistant.da_backend.document.dto.DocumentResponse;
 import com.docassistant.da_backend.document.dto.UpdateStatusRequest;
 import com.docassistant.da_backend.user.User;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,5 +43,10 @@ public class DocumentController {
             @RequestBody UpdateStatusRequest request) {
         documentService.changeStatus(documentId, request.getStatus());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/ask")
+    public ResponseEntity<AskDocumentResponse> ask(@RequestBody @Valid AskDocumentRequest request, @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(documentService.ask(request.getDocumentId(), request.getQuestion(), user));
     }
 }

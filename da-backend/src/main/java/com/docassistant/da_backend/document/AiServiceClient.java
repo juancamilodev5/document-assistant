@@ -3,6 +3,7 @@ package com.docassistant.da_backend.document;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -50,5 +51,37 @@ public class AiServiceClient {
         } catch (Exception e) {
             log.error("failed to send document {} to AI service: {}", documentId, e.getMessage());
         }
+    }
+
+    public Map<String, Object> askQuestion(Long documentId, String question) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Internal-Api-Key", internalApiKey);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> body = Map.of(
+                "document_id", documentId,
+                "question", question
+        );
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                aiServiceUrl + "/documents/ask",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+        );
+
+        Map<String, Object> bodyResponse = response.getBody();
+
+        if (bodyResponse == null)
+            throw new RuntimeException("empty response from AI service");
+
+        if (!bodyResponse.containsKey("answer") || !bodyResponse.containsKey("chunks_used")){
+            log.error("invalid answer from ai service: {}", bodyResponse.keySet());
+            throw new RuntimeException("internal server error");
+        }
+
+        return bodyResponse;
     }
 }
